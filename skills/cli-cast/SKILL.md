@@ -94,10 +94,14 @@ change; serialization can change the L1 charge even for an empty-calldata transf
   use exactly 21000 gas. Do not apply that constant to other fee models.
 - **Arbitrum Nitro:** use the complete `eth_estimateGas` result, or `NodeInterface.gasEstimateComponents()` through
   atlas. It includes the parent-chain posting charge converted into child-chain gas. Budget the full gas limit at the
-  reviewed price cap; do not add a second L1 fee. Prefer EIP-1559 with zero priority fee: Nitro ignores tips and charges
-  the inclusion base fee, so a legacy bid is also not a promise of the charged price. Allow unused gas/price headroom to
-  remain with the sender. Use receipt `gasUsed * effectiveGasPrice` for total cost; `gasUsedForL1` is an included gas
-  component, not an extra wei charge. See
+  reviewed price cap; do not add a second L1 fee. Legacy transactions are supported, but their charged price depends on
+  the active ArbOS version and tip-collection setting. Verify that behavior through atlas and the current
+  [fee processor](https://github.com/OffchainLabs/nitro/blob/master/arbos/tx_processor.go): newer versions make tip
+  collection configurable. When tips are disabled, prefer EIP-1559 with zero priority fee; legacy bids and equal caps
+  still charge the inclusion base fee. When tips are collected, apply the active effective-price rules. A fixed charged
+  price alone does not fix the variable posting-gas component or prove an exact-zero sweep. Reconcile unused gas/price
+  headroom against the reviewed residual policy. Use receipt `gasUsed * effectiveGasPrice` for total cost;
+  `gasUsedForL1` is an included gas component, not an extra wei charge. See
   [gas and fees](https://docs.arbitrum.io/how-arbitrum-works/deep-dives/gas-and-fees) and
   [estimation](https://docs.arbitrum.io/arbitrum-essentials/how-to-estimate-gas).
 - **OP Stack:** reserve execution gas plus the L1 data fee and any enabled operator fee. Through atlas, query the
