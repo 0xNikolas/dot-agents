@@ -137,10 +137,13 @@ transfer. A consuming sweep must state its residual-balance policy and any known
 
 ### Simulate
 
-Simulate the exact prepared call from the intended sender and value, then estimate gas. Delegate bounded `eth_call` and
-`eth_estimateGas` evidence to `evm-atlas`. Use a local fork, project simulation, or Cast trace only when the simulation
-requires a continuous provider, following Resolve Chain and Provider. A successful simulation is evidence, not
-authorization to sign.
+Simulate the exact prepared call, preserving sender, target, value, calldata, nonce, transaction type, gas limit, and
+fee fields, then estimate gas. Delegate bounded `eth_call` and `eth_estimateGas` evidence to `evm-atlas`. When an RPC
+error contradicts the supplied gas or checkpointed balance, have atlas diagnose the exact simulation path before
+attributing it to transaction invalidity or chain-wide type support. Changing fields to make a diagnostic call pass does
+not validate the prepared transaction. Preserve the consuming workflow's simulation and approval requirements. Use a
+local fork, project simulation, or Cast trace only when the simulation requires a continuous provider, following Resolve
+Chain and Provider. A successful simulation is evidence, not authorization to sign.
 
 When exact EIP-7702 simulation needs a signed authorization, use the reference's approved authorization-signing stage
 first; transaction signing and broadcast still follow simulation and transaction approval.
