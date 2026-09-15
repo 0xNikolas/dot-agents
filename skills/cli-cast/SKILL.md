@@ -51,7 +51,8 @@ nonce, `eth_call`, `eth_estimateGas`, transaction, receipt, log, balance, code, 
 `$evm-atlas`, including reads needed to prepare or verify a transaction. Do not ask `evm-atlas` to hand a read back to
 this skill merely because later work may change state.
 
-Use current `cast <command> --help` for exact local syntax. Typical local operations:
+Use `env -i PATH="$PATH" cast <command> --help` for exact local syntax. Cast help can print inherited environment
+values, including API keys; do not load credentials or decrypted dotenv for capability checks. Typical local operations:
 
 ```sh
 cast calldata 'transfer(address,uint256)' "$TO" "$AMOUNT"
