@@ -16,6 +16,10 @@ This skill is coordination-exempt: skip the ai-coord gate for its declared work.
 Separate read, preparation, simulation, signing, and broadcast so no state-changing action is hidden inside command
 construction.
 
+For EIP-7702 authorization or delegation revocation, read [references/eip7702.md](references/eip7702.md) before
+preparation. It defines signer selection, authority versus transaction sender, conditional staged approval, and
+authorization verification in addition to the transaction receipt.
+
 ## Resolve Chain and Provider
 
 Invoke `$evm-atlas` before every network operation. It owns chain resolution, discrete reads, and bounded live
@@ -58,7 +62,8 @@ cast decode-calldata 'transfer(address,uint256)' "$CALLDATA"
 
 Resolve and validate chain ID, sender, target, function signature, arguments, calldata, native value, nonce, and fee
 assumptions without signing. Obtain every on-chain fact through `evm-atlas`; do not request or load key material during
-preparation.
+preparation. Select a supported signer under Sign and Broadcast and check its command capabilities before simulation or
+helper construction.
 
 For Ethereum mainnet, the default gas policy is [references/ethereum-gas.md](references/ethereum-gas.md): fetch a fresh
 Rabby `slow` quote and bind its EIP-1559 fee pair before simulation. The user or a consuming skill may explicitly choose
@@ -132,9 +137,12 @@ Simulate the exact prepared call from the intended sender and value, then estima
 requires a continuous provider, following Resolve Chain and Provider. A successful simulation is evidence, not
 authorization to sign.
 
+When exact EIP-7702 simulation needs a signed authorization, use the reference's approved authorization-signing stage
+first; transaction signing and broadcast still follow simulation and transaction approval.
+
 ### Review
 
-Before any signature or broadcast, present one concrete review containing:
+Before a transaction signature or broadcast, present one concrete review containing:
 
 - chain name and ID, RPC source, and latest block used;
 - sender, target, function, decoded arguments, calldata, and native value;
@@ -149,15 +157,16 @@ Before any signature or broadcast, present one concrete review containing:
 Lead the review with `### ⚠️ Transaction approval required`. Put repeated fields in a compact table, keep the exact
 command in a fenced block, and state precisely what confirmation authorizes. Stop and require explicit user confirmation
 of this review in a subsequent message. If any reviewed field changes outside the browser-wallet exception below,
-simulate again and present a revised review.
+simulate again and present a revised review. Existing explicit approval of the concrete payload and its stated use
+remains valid; EIP-7702 authorization signatures follow the reference's conditional staged review.
 
 For browser signing only, the reviewed gas limit and fees are starting values unless the consuming workflow requires
 them to remain fixed. The user may deliberately change the gas limit, gas price, max fee per gas, or max priority fee
 per gas in the wallet confirmation UI. Their approval of that final wallet screen authorizes those edited gas settings;
 apply chain-specific accounting to the additional fees and resulting affordability. Do not stop, require a second
 approval, or resimulate solely because they differ from the prepared values. Continue only when the chain, sender,
-target, calldata, native value, nonce, and decoded intent still match the approved review. Wallet changes to any of
-those fields require rejection and a revised review.
+target, calldata, native value, nonce, authorization list (if present), and decoded intent still match the approved
+review. Wallet changes to any of those fields require rejection and a revised review.
 
 When fees determine the transfer value or another reviewed invariant, such as leaving exactly zero native balance, the
 browser exception does not apply. Preserve the reviewed transaction type, gas limit, and fee values. If the wallet
@@ -197,10 +206,13 @@ human wait and the wallet may broadcast via its own RPC provider.
 
 ## Stop Conditions
 
-Stop before signing when the signer, sender, chain, target, decoded intent, fee accounting, affordability, or simulation
-result is unresolved. Review must distinguish enforced caps from an estimated reserve; browser approval of edited gas
-settings authorizes those settings but does not establish coverage of omitted chain-specific charges. Stop before
-retrying when broadcast outcome is ambiguous. Completion requires either a verified read result, a local encoding
-result, an approved signature artifact, or a mined receipt verified by `evm-atlas` that matches the reviewed transaction
-apart from user-approved browser-wallet gas settings. Never decorate or truncate addresses, calldata, signatures,
-hashes, RPC URLs, fee values, commands, or safety wording.
+Stop before signing when the signer, sender, chain, target, or decoded intent is unresolved. Transaction signing also
+requires resolved fee accounting, affordability, and simulation. Only the explicitly approved EIP-7702 authorization
+stage may precede those transaction checks; its authorization payload, signer, and intended use must already be
+resolved. Review must distinguish enforced caps from an estimated reserve; browser approval of edited gas settings
+authorizes those settings but does not establish coverage of omitted chain-specific charges. Stop before retrying when
+broadcast outcome is ambiguous. Completion requires either a verified read result, a local encoding result, an approved
+signature artifact, or a mined receipt verified by `evm-atlas` that matches the reviewed transaction apart from
+user-approved browser-wallet gas settings. Never decorate or truncate addresses, calldata, signatures, hashes, RPC URLs,
+fee values, commands, or safety wording. Revocation completion additionally requires the authorization and cleared-code
+checks in [references/eip7702.md](references/eip7702.md).
