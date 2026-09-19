@@ -127,7 +127,8 @@ install-external: _require-clean
 
 alias ie := install-external
 
-# Install catalog skills from a repo
+# Bootstrap or recover catalog skills from a remote repository without a local catalog checkout
+# Source-owned catalog updates use agent-skills' guarded publish-skills workflow.
 # Stale upstream skill pruning is tracked upstream: https://github.com/vercel-labs/skills/issues/415
 [group("skills")]
 [script("bash")]
