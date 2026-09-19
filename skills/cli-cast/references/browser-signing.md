@@ -76,8 +76,9 @@ request if any of those fields change.
 
 For a workflow whose transfer value depends on its fee reserve, including exact-zero and best-effort sweeps, preserve
 the reviewed transaction type, gas limit, and gas price or both EIP-1559 fee caps. Reject wallet changes before signing
-and rebuild, simulate, and review the dependent transfer value. If the wallet cannot preserve a legacy request, stop
-without submitting an EIP-1559 substitute.
+and rebuild, simulate, and review the dependent transfer value. Cast 1.8.3+ forwards an explicit `--legacy` type to the
+browser wallet; earlier versions could drop it at the provider boundary, so confirm the wallet screen shows the reviewed
+type. If the wallet cannot preserve a legacy request, stop without submitting an EIP-1559 substitute.
 
 Do not combine `--browser` with another signer flag. Capture the transaction hash, then have `$evm-atlas` verify the
 receipt before reporting success.

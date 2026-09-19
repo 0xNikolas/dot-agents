@@ -40,6 +40,17 @@ repository templates, Paul's writing voice, idempotency, and direct posting. Rou
 3. Preview broad writes with the repository, exact targets, commands, and issue/PR impact. An already requested ordinary
    write does not require a second approval.
 
+## Notable Flags (gh 2.98+)
+
+- `gh pr checkout --worktree <path>` and `gh issue develop --checkout --worktree <path>` check out into a linked git
+  worktree instead of switching the current branch.
+- `gh search issues --search-type semantic|hybrid` ranks by relevance: issues only, one page, no `--sort`/`--order`, not
+  on GitHub Enterprise Server.
+- `gh config set api_host <gateway> --host <host>` routes that host's API traffic through a gateway; experimental and
+  not a security boundary.
+- `--attach '<file>#<alt>'` on issue/PR create, edit, and comment uploads images or videos; route those writes through
+  `yeet`.
+
 ## Completion
 
 Complete when command output verifies the requested GitHub data or state. After a write, fetch the resulting resource.
