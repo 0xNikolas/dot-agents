@@ -2,7 +2,7 @@
 #
 # commit_codex_agents.sh
 #
-# Run from this repo's pre-commit lint-staged step (.lintstagedrc.mjs). Builds
+# Run from this repo's pre-commit lint-staged step (.lintstagedrc.mjs). Copies
 # ~/.codex/AGENTS.md from the supplied authoritative AGENTS.md, then commits it.
 #
 # Usage: commit_codex_agents.sh [source]
@@ -24,7 +24,7 @@ if [[ "$source_path" != /* ]]; then
   source_path="$(pwd -P)/$source_path"
 fi
 
-just --justfile "$codex_repo/justfile" build "$source_path"
+cp -- "$source_path" "$codex_repo/AGENTS.md"
 
 exec "$script_dir/commit_generated_context.sh" \
   "$codex_repo" \

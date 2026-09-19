@@ -69,14 +69,12 @@ table and the sync recipe together.
 ## Instructions
 
 `AGENTS.md` is the canonical source for PRB's global agent instructions (`CLAUDE.md` in this repo is a symlink to it).
-On commit, a Husky + lint-staged pre-commit hook (`.lintstagedrc.mjs`) regenerates and auto-commits synced copies in
-sibling repos. `ai-commit` is the local deterministic commit engine; install it at `~/.local/bin/ai-commit` so these
-helpers can preserve concurrent work there:
+On commit, a Husky + lint-staged pre-commit hook (`.lintstagedrc.mjs`) copies it unchanged and auto-commits synced
+copies in sibling repos. `ai-commit` is the local deterministic commit engine; install it at `~/.local/bin/ai-commit` so
+these helpers can preserve concurrent work there:
 
-- `~/.codex/AGENTS.md` — flattened via `just build` in `~/.codex` (which flattens `AGENTS_symlink.md`, a symlink to this
-  repo's `AGENTS.md`, then appends Codex-specific `context/AGENTS_EXTRA.md`), committed by
-  `helpers/commit_codex_agents.sh`.
-- `~/.claude/CLAUDE.md` — a flattened copy with no extra content, committed by `helpers/commit_claude_repo.sh`.
+- `~/.codex/AGENTS.md` — copied and committed by `helpers/commit_codex_agents.sh`.
+- `~/.claude/CLAUDE.md` — copied and committed by `helpers/commit_claude_repo.sh`.
 
 Edit `AGENTS.md` here; never hand-edit the generated copies in `~/.codex` or `~/.claude`.
 
