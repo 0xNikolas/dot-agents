@@ -1,10 +1,11 @@
 ---
 argument-hint: "[path] [--dry-run]"
+compatibility: macOS 15 or later only; deletions use the system `/usr/bin/trash` command.
 disable-model-invocation: true
 name: ai-prune
 description:
-  Prune agent scratch directories by moving clearly outdated `.ai/` files into `.ai/archive/YYYY-MM-DD/` and deleting
-  clearly outdated `.cache/` entries, leaving `.ai/todos` untouched.
+  Prune agent scratch directories on macOS by moving clearly outdated `.ai/` files into `.ai/archive/YYYY-MM-DD/` and
+  trashing clearly outdated `.cache/` entries, leaving `.ai/todos` untouched.
 ---
 
 # AI Prune
@@ -13,8 +14,10 @@ If these instructions are already present in the conversation from a slash or do
 do not invoke this skill again through a skill tool.
 
 Review everything under `.ai/` and `.cache/`, decide what is clearly outdated relative to the repository's present
-state, archive the `.ai/` matches, and delete the `.cache/` matches. Prefer keeping over acting: only entries whose
-staleness is backed by concrete evidence are touched.
+state, archive the `.ai/` matches, and move the `.cache/` matches to the macOS Trash. Prefer keeping over acting: only
+entries whose staleness is backed by concrete evidence are touched.
+
+This skill runs only on macOS. Stop and report when `uname -s` is not `Darwin` or `/usr/bin/trash` is missing.
 
 ## Arguments
 
@@ -62,7 +65,9 @@ staleness is backed by concrete evidence are touched.
    - `.ai/` entries: move each to `.ai/archive/$today/<path relative to .ai>` so the archive mirrors the original
      layout. Create parent directories with `mkdir -p`. A same-day re-run merges into the existing dated folder; if the
      destination path already exists, leave the source in place and report the collision instead of overwriting.
-   - `.cache/` entries: delete with `rm -r`. Deletion is irreversible, so downgrade any borderline entry to "kept".
+   - `.cache/` entries: move to the Trash with `/usr/bin/trash -s <path>...` (one call for all entries; `-s` fails on
+     the first path that cannot be moved). Never use `rm`. Trashed entries can be restored from Finder, but still
+     downgrade any borderline entry to "kept".
    - Remove directories under `.ai/` that became empty, except the protected ones.
 
 5. Verify by listing `.ai/archive/$today/` and re-running the inventory from step 2; every acted-on path must be gone
@@ -70,10 +75,10 @@ staleness is backed by concrete evidence are touched.
 
 ## Completion
 
-Report one outcome line, then a table with columns `Path`, `Action` (`archived`, `deleted`, `kept`), and `Reason`.
+Report one outcome line, then a table with columns `Path`, `Action` (`archived`, `trashed`, `kept`), and `Reason`.
 Include kept entries only when they were considered and judged uncertain; do not list protected or obviously live paths.
 Keep paths, commands, and diagnostics undecorated.
 
-- Success: `🗂️ Archived <n> → .ai/archive/<today> · Deleted <m> from .cache · Kept <k> uncertain`
+- Success: `🗂️ Archived <n> → .ai/archive/<today> · Trashed <m> from .cache · Kept <k> uncertain`
 - No-op: `✅ Nothing outdated under .ai or .cache · Kept <k> uncertain`
-- Dry run: `🔎 Would archive <n> → .ai/archive/<today> · Would delete <m> from .cache · Kept <k> uncertain`
+- Dry run: `🔎 Would archive <n> → .ai/archive/<today> · Would trash <m> from .cache · Kept <k> uncertain`
