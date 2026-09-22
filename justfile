@@ -56,7 +56,7 @@ alias precommit := pre-commit
 # ---------------------------------------------------------------------------- #
 
 # Skills synced from their own canonical sources rather than the catalog (must track `install-external`'s sync_skill calls)
-external_skills := "find-skills"
+external_skills := "find-skills ask-matt code-review codebase-design diagnosing-bugs domain-modeling grill-with-docs implement improve-codebase-architecture prototype research resolving-merge-conflicts setup-matt-pocock-skills tdd to-spec to-tickets triage wayfinder wizard grill-me grilling handoff teach to-questionnaire wait-what writing-for-agents git-guardrails-claude-code migrate-to-shoehorn scaffold-exercises setup-pre-commit"
 
 # Print a colorized, titled list of skill names (or a "(none)" fallback)
 [private]
@@ -123,7 +123,37 @@ install-external: _require-clean
 
     sync_skill "vercel-labs/skills" "find-skills"
 
-    printf '{{ GREEN }}%s{{ NORMAL }}\n' "✅ Synced 1 externally managed skill"
+    sync_skill "mattpocock/skills" "ask-matt"
+    sync_skill "mattpocock/skills" "code-review"
+    sync_skill "mattpocock/skills" "codebase-design"
+    sync_skill "mattpocock/skills" "diagnosing-bugs"
+    sync_skill "mattpocock/skills" "domain-modeling"
+    sync_skill "mattpocock/skills" "grill-with-docs"
+    sync_skill "mattpocock/skills" "implement"
+    sync_skill "mattpocock/skills" "improve-codebase-architecture"
+    sync_skill "mattpocock/skills" "prototype"
+    sync_skill "mattpocock/skills" "research"
+    sync_skill "mattpocock/skills" "resolving-merge-conflicts"
+    sync_skill "mattpocock/skills" "setup-matt-pocock-skills"
+    sync_skill "mattpocock/skills" "tdd"
+    sync_skill "mattpocock/skills" "to-spec"
+    sync_skill "mattpocock/skills" "to-tickets"
+    sync_skill "mattpocock/skills" "triage"
+    sync_skill "mattpocock/skills" "wayfinder"
+    sync_skill "mattpocock/skills" "wizard"
+    sync_skill "mattpocock/skills" "grill-me"
+    sync_skill "mattpocock/skills" "grilling"
+    sync_skill "mattpocock/skills" "handoff"
+    sync_skill "mattpocock/skills" "teach"
+    sync_skill "mattpocock/skills" "to-questionnaire"
+    sync_skill "mattpocock/skills" "wait-what"
+    sync_skill "mattpocock/skills" "writing-for-agents"
+    sync_skill "mattpocock/skills" "git-guardrails-claude-code"
+    sync_skill "mattpocock/skills" "migrate-to-shoehorn"
+    sync_skill "mattpocock/skills" "scaffold-exercises"
+    sync_skill "mattpocock/skills" "setup-pre-commit"
+
+    printf '{{ GREEN }}%s{{ NORMAL }}\n' "✅ Synced 30 externally managed skills"
 
 alias ie := install-external
 

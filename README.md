@@ -51,6 +51,7 @@ Skills are installed from these repositories:
 | ------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------- |
 | [0xNikolas/agent-skills](https://github.com/0xNikolas/agent-skills) | Catalog portfolio | General-purpose skills (commit, code-review, yeet, cli-gh, etc.) |
 | [vercel-labs/skills](https://github.com/vercel-labs/skills)         | `find-skills`     | Skills ecosystem discovery                                       |
+| [mattpocock/skills](https://github.com/mattpocock/skills)           | 29 skills (`engineering`, `productivity`, `misc`) | AI Hero's engineering and productivity skills; supersedes this catalog's own `grill-me` and `codebase-design`, which forked from it |
 
 For bootstrap or recovery, install the catalog directly from its remote source; this does not require a local
 `agent-skills` checkout:
