@@ -56,7 +56,7 @@ alias precommit := pre-commit
 # ---------------------------------------------------------------------------- #
 
 # Skills synced from their own canonical sources rather than the catalog (must track `install-external`'s sync_skill calls)
-external_skills := "find-skills ask-matt code-review codebase-design diagnosing-bugs domain-modeling grill-with-docs implement improve-codebase-architecture prototype research resolving-merge-conflicts setup-matt-pocock-skills tdd to-spec to-tickets triage wayfinder wizard grill-me grilling handoff teach to-questionnaire wait-what writing-for-agents git-guardrails-claude-code migrate-to-shoehorn scaffold-exercises setup-pre-commit"
+external_skills := "find-skills ask-matt code-review codebase-design diagnosing-bugs domain-modeling grill-with-docs implement improve-codebase-architecture prototype research resolving-merge-conflicts setup-matt-pocock-skills tdd to-spec to-tickets triage wayfinder wizard grill-me grilling handoff teach to-questionnaire wait-what writing-for-agents git-guardrails-claude-code migrate-to-shoehorn scaffold-exercises setup-pre-commit aso b2b-brand-marketing brand-architecture brand-audit brand-context brand-guidelines brand-identity brand-launch brand-manifesto brand-measurement brand-messaging brand-naming brand-packaging brand-partnerships brand-positioning brand-story brand-strategy brand-voice competitor-branding d2c-marketing email-marketing google-ads influencer-marketing meta-ads personal-brand rebranding target-audience ugc-strategy whatsapp-marketing"
 
 # Print a colorized, titled list of skill names (or a "(none)" fallback)
 [private]
@@ -153,7 +153,37 @@ install-external: _require-clean
     sync_skill "mattpocock/skills" "scaffold-exercises"
     sync_skill "mattpocock/skills" "setup-pre-commit"
 
-    printf '{{ GREEN }}%s{{ NORMAL }}\n' "✅ Synced 30 externally managed skills"
+    sync_skill "arnabbagxd/Brand-building-skills" "aso"
+    sync_skill "arnabbagxd/Brand-building-skills" "b2b-brand-marketing"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-architecture"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-audit"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-context"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-guidelines"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-identity"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-launch"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-manifesto"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-measurement"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-messaging"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-naming"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-packaging"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-partnerships"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-positioning"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-story"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-strategy"
+    sync_skill "arnabbagxd/Brand-building-skills" "brand-voice"
+    sync_skill "arnabbagxd/Brand-building-skills" "competitor-branding"
+    sync_skill "arnabbagxd/Brand-building-skills" "d2c-marketing"
+    sync_skill "arnabbagxd/Brand-building-skills" "email-marketing"
+    sync_skill "arnabbagxd/Brand-building-skills" "google-ads"
+    sync_skill "arnabbagxd/Brand-building-skills" "influencer-marketing"
+    sync_skill "arnabbagxd/Brand-building-skills" "meta-ads"
+    sync_skill "arnabbagxd/Brand-building-skills" "personal-brand"
+    sync_skill "arnabbagxd/Brand-building-skills" "rebranding"
+    sync_skill "arnabbagxd/Brand-building-skills" "target-audience"
+    sync_skill "arnabbagxd/Brand-building-skills" "ugc-strategy"
+    sync_skill "arnabbagxd/Brand-building-skills" "whatsapp-marketing"
+
+    printf '{{ GREEN }}%s{{ NORMAL }}\n' "✅ Synced 59 externally managed skills"
 
 alias ie := install-external
 
