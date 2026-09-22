@@ -61,7 +61,7 @@ if [ -z "$PLAYGROUND_DIR" ]; then
 Error: the `html-playground` skill is not installed.
 
 Install it with:
-  bunx skills add PaulRBerg/agent-skills --skill html-playground --global
+  bunx skills add 0xNikolas/agent-skills --skill html-playground --global
 
 After installing, retry this skill.
 EOF
