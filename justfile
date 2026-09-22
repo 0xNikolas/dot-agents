@@ -132,7 +132,7 @@ alias ie := install-external
 # Stale upstream skill pruning is tracked upstream: https://github.com/vercel-labs/skills/issues/415
 [group("skills")]
 [script("bash")]
-install-catalog repo="PaulRBerg/agent-skills": _require-clean
+install-catalog repo="0xNikolas/agent-skills": _require-clean
     set -euo pipefail
     repo='{{ repo }}'
     claude_skills_dir="$HOME/.claude/skills"
