@@ -79,7 +79,7 @@ instance, resolve that instance through `scripts/resolve-chain.sh`. If the targe
 Etherscan (`references/explorers/etherscan-api.md`) or the `primaryPublicRpc` from
 `references/generated/target-mainnets.json`. If the requested chain is not in
 `references/generated/target-mainnets.json`, stop and ask the user to file a feature request in
-<https://github.com/PaulRBerg/agent-skills>.
+<https://github.com/0xNikolas/agent-skills>.
 
 ## Chain Resolution
 

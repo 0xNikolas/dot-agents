@@ -69,4 +69,4 @@ Route these target chains to Blockscout when available, then to the `primaryPubl
 | Zora            | `7777777` | Not returned by the live chainlist                                             |
 
 Testnets are outside this skill's target list. If the user asks about any non-target chain, ask them to file a feature
-request in <https://github.com/PaulRBerg/agent-skills>.
+request in <https://github.com/0xNikolas/agent-skills>.

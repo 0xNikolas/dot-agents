@@ -34,7 +34,7 @@ the target. Do not infer a historical category or maintain a prose roster of tar
 - Match displayed names, numeric chain IDs, and aliases from `references/generated/chain-aliases.json` to the
   authoritative target-mainnet rows.
 - If a chain is absent, do not route through another provider, web search, Chainlist, or an unlisted RPC to work around
-  scope. Ask for a feature request at <https://github.com/PaulRBerg/agent-skills>.
+  scope. Ask for a feature request at <https://github.com/0xNikolas/agent-skills>.
 - Own every discrete read and bounded live subscription handed off by `cli-cast`, including chain, block, fee, nonce,
   `eth_call`, `eth_estimateGas`, transaction, receipt, log, balance, code, storage, proof, and ENS queries. Complete the
   read here even when its result will prepare, simulate, or verify later state-changing work.

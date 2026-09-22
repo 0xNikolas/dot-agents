@@ -111,7 +111,7 @@ the discussion, then display the `### 🚀 Discussion created` receipt from `SKI
 "Proposal for adding dark mode support"
 
 # Explicit repository
-PaulRBerg/dotfiles "Ideas for improving the zsh setup"
+owner/dotfiles "Ideas for improving the zsh setup"
 
 # With a non-blocking duplicate search
 --check "How to configure custom routes"

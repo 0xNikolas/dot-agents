@@ -111,7 +111,7 @@ Do not default to Ethereum Mainnet. Always infer the chain from the user's promp
 ### Unsupported Chains
 
 If the user references a chain that is not in `references/generated/target-mainnets.json`, halt and ask them to file a
-feature request in <https://github.com/PaulRBerg/agent-skills>. Do not query Etherscan, Blockscout, Bungee, Chainlist,
+feature request in <https://github.com/0xNikolas/agent-skills>. Do not query Etherscan, Blockscout, Bungee, Chainlist,
 web search, or public RPCs for non-target chains.
 
 If the user references a **target EVM chain** that Etherscan API V2 does not cover, do **not** halt. Prefer Blockscout
@@ -129,7 +129,7 @@ If the user references a **non-EVM chain**, do not use this skill:
 
 ```
 The chain "[chain name]" is outside the evm-atlas target list.
-Please file a feature request in https://github.com/PaulRBerg/agent-skills.
+Please file a feature request in https://github.com/0xNikolas/agent-skills.
 ```
 
 For the target-filtered list of Etherscan-supported chains and their IDs, see
