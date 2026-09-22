@@ -30,5 +30,10 @@ flag only when evidence and the user's environment make it consequential.
 For a private JavaScript package (`"private": true`), install into dependencies (`ni package-name`, never `ni -D`);
 translate to the repository's package manager when it has one.
 
+For agent skills, first look for an existing skill-management workflow (for example, a lockfile such as
+`~/.agents/.skill-lock.json` or a task recipe wrapping `skills add`) and give the change that registers the skill there;
+ad hoc installs drift from managed ones. Otherwise use
+`skills add <owner/repo> --skill <name> --global --agent <agents>` through the user's package runner.
+
 Suggest an official installer script only after the user accepts its risk. Confirm the target package and environment
 before giving the exact command.
