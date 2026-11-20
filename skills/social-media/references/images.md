@@ -85,7 +85,7 @@ Reviewed on 2026-10-13. Refresh the relevant official source when a placement ch
 4. Export from the master on every iteration. Resizing can upscale a small master, but it cannot recover detail.
 5. Inspect each distinct aspect ratio at its final dimensions and thumbnail size. Check legibility, crop, alpha, and
    bytes.
-6. Keep required branding visible. Follow project instructions for the X logo and `@PaulRBerg` in the bottom-right.
+6. Keep required branding visible. Follow project instructions for the X logo and `@0xNikolas` in the bottom-right.
    Padding can move baked-in branding away from the output corner. If corner placement is required, composite an
    approved transparent brand lockup after resizing. Do not add a second copy over existing branding.
 7. For lossless text and line art, use PNG. For smaller files, use JPEG and lower `--quality` from 90 to 82 or 75.
