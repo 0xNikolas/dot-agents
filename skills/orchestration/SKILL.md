@@ -337,9 +337,8 @@ value. For a new skill, state repo-local vs. global `~/projects/agent-skills` pl
 skills and why.
 
 When a proposal clears this bar, append at most one compact suggestion (≤2 short sentences) to the adapter's existing
-completion report. Keep its format unchanged. Then offer `$task-handoff` as the next action. Never auto-invoke
-`$task-handoff` or create or revise anything during this review. When nothing qualifies, stay silent without a
-placeholder.
+completion report. Keep its format unchanged. Then offer `$handoff` as the next action. Never auto-invoke `$handoff` or
+create or revise anything during this review. When nothing qualifies, stay silent without a placeholder.
 
 ## Completion
 

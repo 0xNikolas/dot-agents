@@ -1,17 +1,17 @@
 ---
 argument-hint: "[deadline-or-note]"
 compatibility:
-  Requires an interactive Claude Code or Codex CLI session. Producing the final handoff requires the task-handoff skill
-  and its requirements.
+  Requires an interactive Claude Code or Codex CLI session. Producing the final handoff requires the mattpocock/skills
+  handoff skill.
 coordination: exempt
 disable-model-invocation: true
 name: wrap-up
 skill-dependencies:
   - commit
-  - task-handoff
+  - mattpocock/skills#handoff
 description:
   Wind down a long-running session fast when the user must leave — freeze new work, preserve active subagents, secure
-  finished work, and hand off the remainder via task-handoff.
+  finished work, and hand off the remainder via handoff.
 ---
 
 # Wrap Up
@@ -88,11 +88,11 @@ Synthesize one state picture across your own work and every wrap-up report: what
 how far it got — keyed to stable paths and symbols, never line numbers — what remains, which claims are unverified, and
 known blockers.
 
-Invoke the task-handoff skill (`$task-handoff`) with the remaining work, and make each handoff body decision-complete
-per that skill's contract, folding in the synthesis: current tree state, per-workstream progress, remaining steps, and
-the validation the resumed agent must run first. Default to one handoff. Only when remaining workstreams have
-independent outcomes or owners, use coordinated handoffs. If the task-handoff skill is unavailable, deliver the same
-decision-complete content in the final report instead.
+Follow the handoff skill (`$handoff`; it is user-invoked, so read `~/.agents/skills/handoff/SKILL.md` directly) with the
+remaining work, and make each handoff document decision-complete, folding in the synthesis: current tree state,
+per-workstream progress, remaining steps, and the validation the resumed agent must run first. Default to one handoff.
+Only when remaining workstreams have independent outcomes or owners, write one handoff per workstream. If the handoff
+skill is unavailable, deliver the same decision-complete content in the final report instead.
 
 For each `active-unsettled` worker, make settlement and result reconciliation a prerequisite to any resumed edits in its
 scope. Do not turn its still-running assignment into immediately actionable replacement work.
@@ -101,5 +101,5 @@ scope. Do not turn its still-running assignment into immediately actionable repl
 
 Finish with `### 🏁 Wrap-up — session parked` followed by, compactly: completed workstreams with their `$commit` receipt
 OIDs when committed (never a follow-up `git log`), partial workstreams and their exact stopping points, active-unsettled
-workers with their settlement conditions, the handoff command(s) verbatim from task-handoff's report, and an
-always-present risks line (`none` when empty). Keep it short — the user is walking out the door.
+workers with their settlement conditions, the handoff document path(s), and an always-present risks line (`none` when
+empty). Keep it short — the user is walking out the door.

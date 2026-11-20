@@ -60,7 +60,7 @@ alias precommit := pre-commit
 # ---------------------------------------------------------------------------- #
 
 # Skills synced from their own canonical sources rather than the catalog (must track `install-external`'s sync_skill calls)
-external_skills := "ask-matt diagnosing-bugs domain-modeling grill-with-docs prototype resolving-merge-conflicts setup-matt-pocock-skills tdd to-spec to-tickets triage wayfinder wizard teach to-questionnaire wait-what migrate-to-shoehorn scaffold-exercises setup-pre-commit aso b2b-brand-marketing brand-architecture brand-audit brand-context brand-guidelines brand-identity brand-launch brand-manifesto brand-measurement brand-messaging brand-naming brand-packaging brand-partnerships brand-positioning brand-story brand-strategy brand-voice competitor-branding d2c-marketing email-marketing google-ads influencer-marketing meta-ads personal-brand rebranding target-audience ugc-strategy whatsapp-marketing"
+external_skills := "ask-matt code-review handoff implement research writing-for-agents diagnosing-bugs domain-modeling grill-with-docs prototype resolving-merge-conflicts setup-matt-pocock-skills tdd to-spec to-tickets triage wayfinder wizard teach to-questionnaire wait-what migrate-to-shoehorn scaffold-exercises setup-pre-commit aso b2b-brand-marketing brand-architecture brand-audit brand-context brand-guidelines brand-identity brand-launch brand-manifesto brand-measurement brand-messaging brand-naming brand-packaging brand-partnerships brand-positioning brand-story brand-strategy brand-voice competitor-branding d2c-marketing email-marketing google-ads influencer-marketing meta-ads personal-brand rebranding target-audience ugc-strategy whatsapp-marketing"
 
 # Print a colorized, titled list of skill names (or a "(none)" fallback)
 [private]
@@ -109,7 +109,8 @@ install-external: _require-clean
         source="$1"
         skill_name="$2"
 
-        bunx skills add "$source" \
+        # Pinned to the version publish-skills uses so the shared lock keeps a format its planner accepts.
+        bunx skills@1.7.0 add "$source" \
             --global \
             --agent claude-code codex \
             --skill "$skill_name" \
@@ -126,6 +127,11 @@ install-external: _require-clean
     }
 
     sync_skill "mattpocock/skills" "ask-matt"
+    sync_skill "mattpocock/skills" "code-review"
+    sync_skill "mattpocock/skills" "handoff"
+    sync_skill "mattpocock/skills" "implement"
+    sync_skill "mattpocock/skills" "research"
+    sync_skill "mattpocock/skills" "writing-for-agents"
     sync_skill "mattpocock/skills" "diagnosing-bugs"
     sync_skill "mattpocock/skills" "domain-modeling"
     sync_skill "mattpocock/skills" "grill-with-docs"
@@ -175,7 +181,7 @@ install-external: _require-clean
     sync_skill "arnabbagxd/Brand-building-skills" "ugc-strategy"
     sync_skill "arnabbagxd/Brand-building-skills" "whatsapp-marketing"
 
-    printf '{{ GREEN }}%s{{ NORMAL }}\n' "✅ Synced 48 externally managed skills"
+    printf '{{ GREEN }}%s{{ NORMAL }}\n' "✅ Synced 53 externally managed skills"
 
 alias ie := install-external
 
