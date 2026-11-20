@@ -18,15 +18,16 @@ from transcript_common import (
     CORRECTION_PATTERNS,
     MAX_FULL_SESSION_BYTES,
     VERIFICATION_PATTERNS,
+    SessionKind,
     extract_record_channels,
+    extract_session_lineage,
     extract_tool_failures,
     first_string_shallow,
-    keyword_alternatives,
+    keyword_matcher,
     read_jsonl_sampled_with_lines,
     redact_text,
     truncate,
 )
-
 
 CODEX_RECORD_TYPES = {"session_meta", "turn_context", "response_item"}
 ENTRY_TEXT_LIMIT = 240
@@ -38,6 +39,8 @@ class Header:
     path: str
     source: str
     session_id: str
+    session_kind: SessionKind
+    parent_session_id: str | None
     cwd: str | None
     first_timestamp: str | None
     last_timestamp: str | None
@@ -123,6 +126,7 @@ def inspect_file(raw_path: str, keywords: list[str], max_entries: int) -> FileDi
     items = [item for _, item in records]
     source = guess_source(items)
     session_id = extract_session_id(items, path)
+    lineage = extract_session_lineage(items, source)
     cwd = extract_cwd(items)
 
     timestamps: list[str] = []
@@ -177,6 +181,8 @@ def inspect_file(raw_path: str, keywords: list[str], max_entries: int) -> FileDi
         path=str(path),
         source=source,
         session_id=session_id,
+        session_kind=lineage.session_kind,
+        parent_session_id=lineage.parent_session_id,
         cwd=cwd,
         first_timestamp=timestamps[0] if timestamps else None,
         last_timestamp=timestamps[-1] if timestamps else None,
@@ -196,14 +202,8 @@ def assistant_message_qualifies(text: str, keywords: list[str]) -> bool:
 
 
 def keyword_group_matches(text: str, keywords: list[str]) -> bool:
-    if not keywords:
-        return False
-    lowered = text.lower()
-    for keyword in keywords:
-        alternatives = [alternative.lower() for alternative in keyword_alternatives(keyword)]
-        if alternatives and any(alternative in lowered for alternative in alternatives):
-            return True
-    return False
+    matcher = keyword_matcher(keywords)
+    return matcher is not None and matcher.matches(text.lower())
 
 
 def guess_source(items: list[Any]) -> str:
@@ -256,6 +256,7 @@ def print_text_report(digests: list[FileDigest]) -> None:
             continue
         header = digest.header
         print(f"source={header.source} session={header.session_id} cwd={header.cwd or '-'} sampled={header.sampled}")
+        print(f"kind={header.session_kind} parent={header.parent_session_id or '-'}")
         print(
             f"first={header.first_timestamp or '-'} last={header.last_timestamp or '-'} "
             f"user={header.user_messages} assistant={header.assistant_messages} "

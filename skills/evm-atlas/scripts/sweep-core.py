@@ -11,7 +11,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
 HASH_RE = re.compile(r"^0x[0-9a-fA-F]{64}$")
 HEX_RE = re.compile(r"^0x(?:0|[1-9a-fA-F][0-9a-fA-F]*)$")
@@ -38,7 +37,7 @@ def iso_time(value: Any, field: str) -> dt.datetime:
     if not isinstance(value, str):
         raise SweepError(f"{field} must be an ISO-8601 string")
     try:
-        parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = dt.datetime.fromisoformat(value)
     except ValueError as exc:
         raise SweepError(f"{field} must be an ISO-8601 string") from exc
     if parsed.tzinfo is None:
@@ -77,7 +76,7 @@ def validate_checkpoint(checkpoint: Any) -> dict[str, Any]:
     return {**checkpoint, "blockHash": checkpoint["blockHash"].lower()}
 
 
-def build_plan(spec: Any) -> dict[str, Any]:
+def build_plan(spec: Any, *, now: dt.datetime | None = None) -> dict[str, Any]:
     if not isinstance(spec, dict):
         raise SweepError("plan input must be an object")
     address = spec.get("address")
@@ -108,6 +107,8 @@ def build_plan(spec: Any) -> dict[str, Any]:
         capabilities = provider.get("capabilities")
         if not isinstance(capabilities, list) or not all(channel in HISTORY_CHANNELS for channel in capabilities):
             raise SweepError(f"provider {provider['id']} has invalid capabilities")
+        if provider.get("kind") == "etherscan":
+            require_etherscan_support(chain["id"], now)
         normalized_providers.append(
             {
                 "id": provider["id"],
@@ -166,6 +167,20 @@ def build_plan(spec: Any) -> dict[str, Any]:
     }
 
 
+def require_etherscan_support(chain_id: int, now: dt.datetime | None) -> None:
+    targets = load_json(Path(__file__).resolve().parents[1] / "references" / "generated" / "target-mainnets.json")
+    target = next((row for row in targets["chains"] if row["chainId"] == chain_id), None)
+    if target is None:
+        raise SweepError(f"chain {chain_id} is not a target mainnet")
+    cutoff = target.get("etherscanApiUnsupportedFrom")
+    if cutoff:
+        execution_time = now if now is not None else dt.datetime.now(dt.UTC)
+        if execution_time.tzinfo is None:
+            raise SweepError("execution time must include a timezone")
+        if execution_time.astimezone(dt.UTC).date() >= dt.date.fromisoformat(cutoff):
+            raise SweepError(f"Etherscan API unsupported for chain {chain_id} from {cutoff}")
+
+
 def parse_quantity(value: Any, context: str) -> int:
     if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
         return value
@@ -189,7 +204,11 @@ def touches(row: dict[str, Any], address: str) -> bool:
 
 
 def failed_row(row: dict[str, Any]) -> bool:
-    return str(row.get("isError", row.get("is_error", "0"))) == "1" or str(row.get("txreceipt_status", "1")) == "0" or bool(str(row.get("errCode", row.get("error", ""))).strip())
+    return (
+        str(row.get("isError", row.get("is_error", "0"))) == "1"
+        or str(row.get("txreceipt_status", "1")) == "0"
+        or bool(str(row.get("errCode", row.get("error", ""))).strip())
+    )
 
 
 def qualifies(profile: str, channel: str, row: dict[str, Any], address: str) -> bool:
@@ -250,7 +269,10 @@ def evaluate(plan: Any, responses: Any) -> dict[str, Any]:
         if not isinstance(response, dict) or response.get("ok") is not True:
             gaps.append({"channel": channel, "reason": "missing or failed checkpoint-bound state response"})
             continue
-        if response.get("blockHash", "").lower() != checkpoint["blockHash"] and response.get("checkpointBound") is not True:
+        if (
+            str(response.get("blockHash") or "").lower() != checkpoint["blockHash"]
+            and response.get("checkpointBound") is not True
+        ):
             gaps.append({"channel": channel, "reason": "state response is not bound to the checkpoint hash"})
             continue
         try:
@@ -261,7 +283,13 @@ def evaluate(plan: Any, responses: Any) -> dict[str, Any]:
         state_values[channel] = quantity
         checked.append({"channel": channel, "source": "state-rpc", "result": "positive" if quantity else "negative"})
         if quantity and state_positive is None:
-            state_positive = {"source": "state-rpc", "channel": channel, "value": quantity, "blockNumber": checkpoint["blockNumber"], "blockHash": checkpoint["blockHash"]}
+            state_positive = {
+                "source": "state-rpc",
+                "channel": channel,
+                "value": quantity,
+                "blockNumber": checkpoint["blockNumber"],
+                "blockHash": checkpoint["blockHash"],
+            }
 
     zero_shortcut = (
         profile == "bootstrap-discovery"
@@ -292,7 +320,9 @@ def evaluate(plan: Any, responses: Any) -> dict[str, Any]:
             provider_results.append({"providerId": provider_id, "complete": False, "earliest": None, "positive": False})
             continue
         if indexed_through < checkpoint["blockNumber"]:
-            gaps.append({"channel": "history", "reason": f"provider {provider_id} is indexed only through {indexed_through}"})
+            gaps.append(
+                {"channel": "history", "reason": f"provider {provider_id} is indexed only through {indexed_through}"}
+            )
             provider_results.append({"providerId": provider_id, "complete": False, "earliest": None, "positive": False})
             continue
         channels = response.get("channels")
@@ -334,10 +364,17 @@ def evaluate(plan: Any, responses: Any) -> dict[str, Any]:
             complete = channel_response.get("complete") is True
             if not channel_evidence and not complete:
                 provider_complete = False
-                gaps.append({"channel": channel, "reason": f"provider {provider_id} did not exhaust the bounded channel"})
+                gaps.append(
+                    {"channel": channel, "reason": f"provider {provider_id} did not exhaust the bounded channel"}
+                )
             elif channel_evidence and not complete:
                 provider_complete = False
-                gaps.append({"channel": channel, "reason": f"provider {provider_id} positive response is not complete enough for earliest evidence"})
+                gaps.append(
+                    {
+                        "channel": channel,
+                        "reason": f"provider {provider_id} positive response is not complete enough for earliest evidence",
+                    }
+                )
             checked.append(
                 {
                     "channel": channel,
@@ -410,8 +447,15 @@ def evaluate(plan: Any, responses: Any) -> dict[str, Any]:
 
 def validate_blockscout(payload: Any) -> dict[str, Any]:
     fields = ("transactions_count", "token_transfers_count", "gas_usage_count", "validations_count")
-    valid = isinstance(payload, dict) and all(isinstance(payload.get(field), str) and re.fullmatch(r"0|[1-9]\d*", payload[field]) for field in fields)
-    return {"schemaVersion": 1, "validator": "blockscout-address-counters", "valid": valid, "counts": {field: payload.get(field) for field in fields} if isinstance(payload, dict) else {}}
+    valid = isinstance(payload, dict) and all(
+        isinstance(payload.get(field), str) and re.fullmatch(r"0|[1-9]\d*", payload[field]) for field in fields
+    )
+    return {
+        "schemaVersion": 1,
+        "validator": "blockscout-address-counters",
+        "valid": valid,
+        "counts": {field: payload.get(field) for field in fields} if isinstance(payload, dict) else {},
+    }
 
 
 def validate_transfer_topics(payload: Any, address: str) -> dict[str, Any]:
@@ -423,7 +467,11 @@ def validate_transfer_topics(payload: Any, address: str) -> dict[str, Any]:
     if isinstance(rows, list):
         for row in rows:
             topics = row.get("topics") if isinstance(row, dict) else None
-            if not isinstance(topics, list) or len(topics) < 3 or not all(isinstance(topic, str) for topic in topics[:3]):
+            if (
+                not isinstance(topics, list)
+                or len(topics) < 3
+                or not all(isinstance(topic, str) for topic in topics[:3])
+            ):
                 conformant_rows = []
                 break
             lowered = [topic.lower() for topic in topics]

@@ -13,23 +13,23 @@ more details.
 
 ```
 ~/.agents/
+├── docs/        # On-demand reference docs linked from AGENTS.md
 └── skills/      # Skills loaded by agents
 ```
-
-> [!NOTE] `skills/.system` contains Claude Code's official skills. There is an open issue in the Claude Code repo to
-> relocate it: `https://github.com/anthropics/claude-code/issues/20820`.
 
 ## How It Works
 
 AI agents (Claude Code, Cursor, GitHub Copilot, etc.) look for skills in their config directories. This repository acts
-as a central location that agents can reference via symlink:
+as a central location that agents can reference via symlink. For Claude Code, the `agent-skills` publish workflow
+installs each skill here and then creates a per-skill relative symlink:
 
 ```bash
-# Example for Claude Code
-ln -s ~/.agents/skills ~/.claude/skills
+# Example for a single skill
+ln -s ../../.agents/skills/<name> ~/.claude/skills/<name>
 ```
 
-This way, all your agents share the same skill library.
+Claude-only skills (`metadata.install-targets: claude-code`) are installed as real directories under `~/.claude/skills`
+instead of symlinks. This way, all your agents share the same skill library.
 
 ### Managing Skills
 
@@ -40,18 +40,18 @@ bunx skills add owner/repo
 ```
 
 > [!NOTE] The GitHub repository must contain a `skills/` directory with skill definitions. See
-> [skill discovery](https://github.com/vercel-labs/add-skill?tab=readme-ov-file#skill-discovery) for supported directory
-> structures.
+> [skill discovery](https://github.com/vercel-labs/skills#skill-discovery) for supported directory structures.
 
 ## 📦 Skill Sources
 
 Skills are installed from these repositories:
 
-| Source                                                              | Managed skills    | Description                                                      |
-| ------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------- |
-| [0xNikolas/agent-skills](https://github.com/0xNikolas/agent-skills) | Catalog portfolio | General-purpose skills (commit, code-review, yeet, cli-gh, etc.) |
-| [vercel-labs/skills](https://github.com/vercel-labs/skills)         | `find-skills`     | Skills ecosystem discovery                                       |
-| [mattpocock/skills](https://github.com/mattpocock/skills)           | 29 skills (`engineering`, `productivity`, `misc`) | AI Hero's engineering and productivity skills; supersedes this catalog's own `grill-me` and `codebase-design`, which forked from it |
+| Source                                                                                  | Managed skills                                    | Description                                                                                                  |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [0xNikolas/agent-skills](https://github.com/0xNikolas/agent-skills)                     | Catalog portfolio                                 | General-purpose skills (commit, yeet, orchestration)                                                         |
+| [vercel-labs/skills](https://github.com/vercel-labs/skills)                             | `find-skills`                                     | Skills ecosystem discovery                                                                                   |
+| [mattpocock/skills](https://github.com/mattpocock/skills)                               | 29 skills (`engineering`, `productivity`, `misc`) | AI Hero's engineering and productivity skills; supersedes the catalog's own `grill-me` and `codebase-design` |
+| [arnabbagxd/Brand-building-skills](https://github.com/arnabbagxd/Brand-building-skills) | 29 skills                                         | Brand strategy and marketing skills                                                                          |
 
 For bootstrap or recovery, install the catalog directly from its remote source; this does not require a local
 `agent-skills` checkout:
@@ -67,19 +67,17 @@ To change or reconcile the agent-skills catalog, work in the `agent-skills` sour
 `publish-skills` workflow after source changes. That owner workflow commits and pushes the source, coordinates target
 updates, checks the expected `HEAD` and process lock, and verifies source-owned installation and CLI-lock drift.
 
-The agent-skills row is catalog-owned. Every other row is an intentionally external source: its files are tracked here as
-global installation snapshots, while canonical ownership remains upstream. They are valid dependencies even though they
-do not belong in the `agent-skills` catalog.
-
-Use `just install-external` to install or refresh the declared external skills for Codex and Claude Code. **Do not
-modify, refactor, or include externally sourced skills in catalog tasks.** When skills are added or removed, update this
-table and the sync recipe together.
+The agent-skills row is catalog-owned. Every other row is an intentionally external source installed by
+`just install-external`: its files are tracked here as global installation snapshots, while canonical ownership remains
+upstream. They are valid dependencies even though they do not belong in the `agent-skills` catalog.
 
 ## Instructions
 
-`AGENTS.md` is the canonical source for PRB's global agent instructions. On commit, a Husky + lint-staged pre-commit
-hook (`.lintstagedrc.mjs`) copies it unchanged and auto-commits synced copies in sibling repos. `ai-commit` is the local
-deterministic commit engine; install it at `~/.local/bin/ai-commit` so these helpers can preserve concurrent work there:
+`AGENTS.md` is the canonical source for the global agent instructions. On commit, a Husky + lint-staged pre-commit hook
+(`.lintstagedrc.mjs`) copies it unchanged, auto-commits synced copies in sibling repos, and pushes each new commit with
+`ai-commit push`. A failed push prints a warning to stderr and never fails the commit here. `ai-commit` is the local
+deterministic commit engine; install it at `~/.local/bin/ai-commit` (built from `~/projects/agent-skills/toolkit` via
+`just toolkit::install-cli` there) so these helpers can preserve concurrent work there:
 
 - `~/.codex/AGENTS.md` — copied and committed by `helpers/commit_codex_agents.sh`.
 - `~/.claude/CLAUDE.md` — copied and committed by `helpers/commit_claude_repo.sh`.

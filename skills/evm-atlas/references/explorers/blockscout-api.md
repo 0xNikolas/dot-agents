@@ -7,23 +7,23 @@ Query target-mainnet data that Blockscout indexes. Blockscout exposes three comp
 - **Native REST API v2** (`/api/v2/...`) — rich JSON, the recommended surface. Returns balances, full token holdings,
   transactions, and transfers with embedded token/exchange-rate metadata.
 - **Etherscan-compatible RPC** (`/api?module=...&action=...`) — legacy `{status,message,result}` shape. Useful for
-  porting existing Etherscan code; superseded by v2.
-- **Unified PRO API** (`https://api.blockscout.com/...`) — a single keyed host fronting both of the above across major
-  chains, selected by `chain_id`.
+  porting existing Etherscan code. v2 supersedes it.
+- **Unified PRO API** (`https://api.blockscout.com/...`) — a single keyed host serving both surfaces across major
+  chains. `chain_id` selects the chain.
 
 This skill covers read-only account/address queries: native balance, ERC-20/721/1155 holdings and transfers, transaction
 history, and first-funding tracing.
 
-**Relationship to Etherscan (`references/explorers/etherscan-api.md`):** Same problem space, different explorer. Prefer
-Blockscout when the target chain is **not** on Etherscan, when a paid Etherscan target chain needs free-tier data, when
-you want full token holdings on the free tier, or when the user names Blockscout/Chainscout. The two surfaces are
-interchangeable for native-balance and transfer queries.
+**Relationship to Etherscan (`references/explorers/etherscan-api.md`):** Prefer Blockscout on covered overlaps,
+especially when Etherscan access gates or holdings/pagination limits reduce completeness. Use Etherscan's official CLI
+when it is primary or a concrete fallback trigger applies. The Etherscan CLI does not target Blockscout. Keep the
+Blockscout API routes below. Preserve each provider's response shape, coverage, and checkpoint rules.
 
 ## Prerequisites
 
 ### API Key
 
-A free Blockscout PRO key (`proapi_…`) is expected in `$BLOCKSCOUT_API_KEY`:
+This skill expects a free Blockscout PRO key (`proapi_…`) in `$BLOCKSCOUT_API_KEY`:
 
 ```bash
 if [ -z "$BLOCKSCOUT_API_KEY" ]; then
@@ -33,13 +33,14 @@ if [ -z "$BLOCKSCOUT_API_KEY" ]; then
 fi
 ```
 
-The key is required for the unified PRO host (`api.blockscout.com`), which returns `401 {"error":"Unauthorized"}`
-without it. Keyless per-instance hosts are an exception only for a self-hosted or third-party target instance that the
-gateway does not serve; see [Per-Instance Exception](#per-instance-exception).
+The unified PRO host (`api.blockscout.com`) requires the key. Without it, the host returns
+`401 {"error":"Unauthorized"}`. Keyless per-instance hosts are an exception only for a self-hosted or third-party target
+instance that the gateway does not serve. See [Per-Instance Exception](#per-instance-exception).
 
 ### Plan & Credit Detection
 
-Run once per session and cache the result. It reads rate-limit/credit headers returned on every PRO response:
+Run the helper once per session. Cache the result. The helper reads rate-limit/credit headers that every PRO response
+returns:
 
 ```bash
 scripts/blockscout-detect-plan.sh
@@ -55,13 +56,14 @@ rate_limit_reset=441
 credits_remaining=99880
 ```
 
-`x-ratelimit-limit` maps directly to plan tier; see the Plans and Credit Costs tables in
+`x-ratelimit-limit` maps directly to plan tier. See the Plans and Credit Costs tables in
 `references/explorers/blockscout-endpoints.md`.
 
 At the default 20 credits/call, the free 100K/day tier ≈ 5,000 calls/day. `blockscout-detect-plan.sh` itself costs ~20
-credits — do not re-run mid-session.
+credits. Do not re-run it mid-session.
 
-Per-instance public hosts are not credit-metered but are rate-limited to **3 req/s (300/min) per IP**.
+Per-instance public hosts do not meter credits. Instance configuration sets their rate limits per IP. The Blockscout
+backend default is **300 requests per minute** (`API_RATE_LIMIT_BY_IP`). Operators may change it.
 
 ## Choosing an Endpoint
 
@@ -73,19 +75,19 @@ Decide per query:
 | Porting existing Etherscan **V2** code (minimal diff)                  | **Etherscan-V2 alias** `https://api.blockscout.com/v2/api?chain_id={id}&module=...` |
 | Gateway does not serve a self-hosted or third-party target instance    | **Per-instance** `https://{instance}/api/v2/...` (no key) — resolve via Chainscout  |
 
-For Blockscout-hosted targets, keep using the keyed gateway after a `401`, `429`, or transient error; a per-instance
+For Blockscout-hosted targets, keep using the keyed gateway after a `401`, `429`, or transient error. A per-instance
 host is not a fallback for those conditions. If the gateway does not serve a target's self-hosted or third-party
 instance, resolve that instance through `scripts/resolve-chain.sh`. If the target chain is absent from Chainscout, use
 Etherscan (`references/explorers/etherscan-api.md`) or the `primaryPublicRpc` from
 `references/generated/target-mainnets.json`. If the requested chain is not in
-`references/generated/target-mainnets.json`, stop and ask the user to file a feature request in
+`references/generated/target-mainnets.json`, stop. Under that condition, ask the user to file a feature request in
 <https://github.com/0xNikolas/agent-skills>.
 
 ## Chain Resolution
 
 Do **not** default to Ethereum Mainnet. Infer the chain from the prompt first (same rules as
 `references/explorers/etherscan-api.md`: explicit chain mention, chain-specific tokens like POL→137 / ARB→42161, testnet
-keywords). If ambiguous, ask.
+keywords). If the chain is ambiguous, ask the user.
 
 Two-step resolution:
 
@@ -109,8 +111,8 @@ layer=1
 rollup_type=
 ```
 
-`hosted_by=blockscout` indicates the chain is a candidate for the PRO host; community-hosted chains (`hosted_by` other
-than `blockscout`) are per-instance only. Chainscout indexes many networks, but this skill only uses target chains — see
+`hosted_by=blockscout` indicates the chain is a candidate for the PRO host. Community-hosted chains (`hosted_by` other
+than `blockscout`) are per-instance only. Chainscout indexes many networks, but this skill only uses target chains. See
 `references/generated/blockscout-chains.md`.
 
 ## Authentication
@@ -149,7 +151,8 @@ curl -s -H "authorization: Bearer $BLOCKSCOUT_API_KEY" \
 }
 ```
 
-`coin_balance` is the native balance in wei. See [Unit Conversion](#unit-conversion).
+`coin_balance` is the indexed native balance in wei. It can lag chain state. When the amount decides anything, use RPC
+`eth_getBalance`. See [Unit Conversion](#unit-conversion).
 
 ### Token Holdings
 
@@ -183,7 +186,9 @@ Each entry embeds full token metadata and balance:
 ]
 ```
 
-For ERC-721/1155, `token_id` and `token_instance` are populated. Divide `value` by `10^decimals` per token.
+For ERC-721/1155, the API populates `token_id` and `token_instance`. Divide `value` by `10^decimals` per token. Indexed
+`value` can be stale (a listed USDT balance has read zero on-chain). Treat these endpoints as token discovery. Confirm
+amounts with RPC `balanceOf`.
 
 ### Transaction History
 
@@ -207,8 +212,8 @@ curl -s -H "authorization: Bearer $BLOCKSCOUT_API_KEY" \
 ```
 
 `type` accepts `ERC-20`, `ERC-721`, or `ERC-1155`. Each item carries `block_number`, `timestamp` (ISO-8601 UTC), `from`,
-`to`, `total` (`value`/`decimals` for fungible; `token_id` for NFTs), and embedded `token` metadata. Derive mint/burn
-from `from`/`to` being the zero address.
+`to`, `total` (`value`/`decimals` for fungible tokens, `token_id` for NFTs), and embedded `token` metadata. Derive
+mint/burn from `from`/`to` being the zero address.
 
 ### Pagination (keyset)
 
@@ -223,20 +228,26 @@ curl -s -H "authorization: Bearer $BLOCKSCOUT_API_KEY" \
   "https://api.blockscout.com/1/api/v2/addresses/0xADDR/token-transfers?type=ERC-20&block_number=25103884&index=1275&items_count=50"
 ```
 
-When `next_page_params` is `null`, the last page was reached. There is no `sort` parameter — v2 returns newest-first.
+When `next_page_params` is `null`, you have reached the last page. The API has no `sort` parameter. v2 returns
+newest-first.
 
 ## Etherscan-Compatible Layer
 
-For porting existing Etherscan V2 code (`references/explorers/etherscan-api.md`) with minimal changes, use the
-**Etherscan-V2 alias**. It returns the familiar `{status,message,result}` shape:
+For existing direct Etherscan API integrations, use the **Etherscan-V2 alias**. It returns `{status,message,result}`.
+This is a Blockscout API route, not an Etherscan CLI command. Do not apply the CLI's unwrapped-output rules here:
 
 ```bash
 curl -s "https://api.blockscout.com/v2/api?chain_id=1&module=account&action=balance&address=0xADDR&apikey=$BLOCKSCOUT_API_KEY"
 # → {"message":"OK","result":"9774452722498812330011","status":"1"}
 ```
 
-Porting checklist from Etherscan V2: change host `api.etherscan.io` → `api.blockscout.com`, use `chain_id` (canonical;
-`chainid` is tolerated), and swap the key var. Action → v2 mapping:
+Porting checklist from Etherscan V2:
+
+- Change host `api.etherscan.io` → `api.blockscout.com`.
+- Use `chain_id` (canonical). The API tolerates `chainid`.
+- Replace the key variable.
+
+Action → v2 mapping:
 
 | Need                 | Etherscan action            | Native v2 (preferred)                       | Compat action              |
 | -------------------- | --------------------------- | ------------------------------------------- | -------------------------- |
@@ -252,7 +263,7 @@ Porting checklist from Etherscan V2: change host `api.etherscan.io` → `api.blo
 | Logs                 | `getLogs`                   | —                                           | `getLogs`                  |
 | ABI / source         | `getabi` / `getsourcecode`  | `smart-contracts/{h}`                       | `getabi` / `getsourcecode` |
 
-Blockscout's compat layer does not implement every Etherscan action; when one is missing, use the native v2 equivalent.
+Blockscout's compat layer does not implement every Etherscan action. When one is missing, use the native v2 equivalent.
 Full endpoint catalog: `references/explorers/blockscout-endpoints.md`.
 
 ## First Funding Transaction
@@ -260,14 +271,30 @@ Full endpoint catalog: `references/explorers/blockscout-endpoints.md`.
 Blockscout has **no `fundedby` equivalent**. Use the compat `txlist`/`txlistinternal` with ascending sort (the native v2
 surface only sorts newest-first, which is awkward for "earliest"):
 
+Set `checkpoint_number` to the verified cutoff block before these first-page requests:
+
 ```bash
-curl -s "https://api.blockscout.com/v2/api?chain_id=1&module=account&action=txlist&address=0xADDR&sort=asc&page=1&offset=10&apikey=$BLOCKSCOUT_API_KEY"
-curl -s "https://api.blockscout.com/v2/api?chain_id=1&module=account&action=txlistinternal&address=0xADDR&sort=asc&page=1&offset=10&apikey=$BLOCKSCOUT_API_KEY"
+curl -s "https://api.blockscout.com/v2/api?chain_id=1&module=account&action=txlist&address=0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe&startblock=0&endblock=$checkpoint_number&sort=asc&page=1&offset=10&apikey=$BLOCKSCOUT_API_KEY"
+curl -s "https://api.blockscout.com/v2/api?chain_id=1&module=account&action=txlistinternal&address=0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe&startblock=0&endblock=$checkpoint_number&sort=asc&page=1&offset=10&apikey=$BLOCKSCOUT_API_KEY"
 ```
 
-Pick the earliest entry where `to == address` (lowercased), `value > 0`, and (normal txs) `isError == "0"`. The funding
-tx is the lower `blockNumber` across both lists. Check both because addresses are often funded internally (CEX
-router/proxy withdrawals). Genesis-allocated balances appear in neither list — report explicitly.
+These are first-page probes. Fix `startblock=0` and `endblock` to the verified checkpoint on every request. Advance
+`page` with the same bounds, offset, and ascending sort. Two channels do not imply two calls.
+
+For each channel, stop at its first qualifying row only after covering every preceding row and proving same-block
+transaction/trace order. If that order is unproven, cover the entire candidate block and select its earliest qualifying
+row. If no candidate appears, exhaust that channel through the cutoff. Both complete ranges are required only to prove
+no funding.
+
+Require an incoming recipient matching the address, positive native `value`, and successful execution for both normal
+and internal rows. Inspect `contractAddress` for creation rows with empty `to`. Require `isError == "0"` where the
+compat row supplies it. For missing or ambiguous fields, prove normal success from the receipt and internal success from
+trace evidence. Parent receipt success alone does not prove an internal call succeeded.
+
+Compare qualifying rows by block and transaction index. Resolve an internal row's parent transaction index from its
+receipt when absent. Preserve `traceId` within the transaction. Report unresolved ties instead of sorting by hash. Check
+both channels because contract calls can fund an address. Genesis allocations appear in neither list. A balance without
+funding rows alone does not prove a genesis allocation.
 
 ## Per-Instance Exception
 
@@ -285,22 +312,27 @@ curl -s "${api_url}/v2/addresses/0xADDR/token-balances"
 curl -s "${api_url}?module=account&action=balance&address=0xADDR"
 ```
 
-Use the helper's `api_url` for API requests; `instance_url` is the page host. An explicit `explorerApiUrl` in
-`target-mainnets.json` takes precedence over a Chainscout URL. Morph (`2818`) uses
-`https://explorer-api.morph.network/api` for its API and `https://explorer.morph.network` for pages, verified in
-Chromium and through the API on 2026-09-15.
+Use the helper's `api_url` for API requests. `instance_url` is the page host. An explicit `explorerApiUrl` in
+`target-mainnets.json` or a Blockscout overlay `apiUrl` takes precedence over a Chainscout URL.
+
+Morph (`2818`) uses `https://explorer-api.morph.network/api` for its API and `https://explorer.morph.network` for pages,
+verified in Chromium and through the API on 2026-09-15. Linea (`59144`) uses `https://api-explorer.linea.build/api` for
+its API. `https://explorer.linea.build` serves only pages and returns HTML `404` under `/api`. Verification through the
+frontend's `NEXT_PUBLIC_API_HOST` and the API established this on 2026-10-01. When a self-hosted page host returns HTML
+for `/api`, read its `/assets/envs.js` `NEXT_PUBLIC_API_HOST` before reporting the instance down.
 
 Superseed (`5330`) is not a usable Blockscout instance despite its stale Chainscout entry. Chromium verified on
 2026-09-15 that `https://explorer.superseed.xyz` serves Conduit Explorer and explicitly lacks historical transactions,
-holdings, and transfers. Use the target RPC for state facts; preserve indexed-history coverage as unknown.
+holdings, and transfers. The chain is also defunct (see its `defunct` target row), so no replacement indexer is
+expected. Use the target RPC for state facts. Preserve indexed-history coverage as unknown.
 
 Per-instance hosts are community-operated for many chains, so uptime and indexing depth vary. Do not use one to bypass
 missing credentials, rate limits, or transient errors on a Blockscout-hosted target.
 
 ## Unit Conversion
 
-Native balances and token `value`s are in the smallest unit. Divide by `10^decimals` (18 for native and most tokens;
-USDC/USDT 6; WBTC 8):
+Native balances and token `value`s are in the smallest unit. Divide by `10^decimals` (18 for native and most tokens,
+USDC/USDT 6, WBTC 8):
 
 ```bash
 echo "scale=18; 9774452722498812330011 / 1000000000000000000" | bc
@@ -309,17 +341,19 @@ echo "scale=18; 9774452722498812330011 / 1000000000000000000" | bc
 
 ## Output Formatting
 
-Use the completion format in `SKILL.md`: preserve full identifiers and use a compact table only when fields repeat.
+Use the completion format in `SKILL.md`. Preserve full identifiers. Use a compact table only when fields repeat.
 
 ## Error Handling
 
-| Symptom                              | Cause / Action                                                                                                    |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `401 {"error":"Unauthorized"}`       | Missing/invalid key on the gateway. Report the coverage gap; do not substitute a hosted per-instance route.       |
-| `404` on `api.blockscout.com/{id}/…` | Resolve the target through Chainscout; use its per-instance route only when it qualifies for the exception above. |
-| `429` / `x-ratelimit-remaining: 0`   | Rate limited. Back off until `x-ratelimit-reset` (seconds); retain the keyed gateway route.                       |
-| `503`                                | Transient gateway error. Retry within the bounded policy; otherwise report a coverage gap.                        |
-| Compat `{"status":"0", …}`           | Etherscan-shaped error (`No transactions found`, bad address, etc.).                                              |
+| Symptom                                    | Cause / Action                                                                                                                              |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `401 {"error":"Unauthorized"}`             | Missing/invalid key on the gateway. Report the coverage gap. Do not substitute a hosted per-instance route.                                 |
+| `402` "requires Builder/Business/Pro plan" | Chain is plan-gated on the gateway (e.g. Polygon `137`). Coverage gap for this route. Do not retry.                                         |
+| `404` on `api.blockscout.com/{id}/…`       | Resolve the target through Chainscout. Use its per-instance route only when it qualifies for the exception above.                           |
+| `429` / `x-ratelimit-remaining: 0`         | Rate limited. Back off until `x-ratelimit-reset` (seconds). Retain the keyed gateway route.                                                 |
+| `503`                                      | Transient gateway error. Retry within the bounded policy. If retrying within that policy does not resolve the error, report a coverage gap. |
+| `403` HTML "Just a moment..." page         | Bot challenge on a hosted `*.blockscout.com` instance. Use the keyed gateway, not repeated scripted retries.                                |
+| Compat `{"status":"0", …}`                 | Etherscan-shaped error (`No transactions found`, bad address, etc.).                                                                        |
 
 ## Reference Files
 
@@ -337,5 +371,3 @@ For features beyond this skill (blocks, smart contracts, search, stats, NFT inst
 - AI-friendly docs index: `https://docs.blockscout.com/llms.txt`
 - Per-instance interactive schema: `https://{instance}/api-docs`
 - PRO OpenAPI spec: `https://docs.blockscout.com/openapi-specs/pro-api.yaml`
-
-Use `WebFetch` to retrieve these for extended capabilities.

@@ -1,6 +1,6 @@
 # Claude Code Issue Workflow
 
-Create an issue in `anthropics/claude-code`. Every `gh` command must use that repository; never infer it from the
+Create an issue in `anthropics/claude-code`. Every `gh` command must use that repository. Never infer it from the
 working directory.
 
 ## Live Form Workflow
@@ -9,24 +9,33 @@ working directory.
    `<skill-dir>/scripts/yeet-context.sh repo anthropics/claude-code --issue-templates`. Resolve `<skill-dir>` to the
    absolute directory containing the owning `SKILL.md`.
 2. Select the live YAML form matching the user's intent: bug, feature request, documentation, or model behavior. Ask
-   only when that semantic choice is genuinely ambiguous.
+   only when that semantic choice is genuinely ambiguous. Use the claude.ai GitHub-connection form only for a claude.ai
+   GitHub-connector problem, and leave its claude.ai-filled diagnostics field empty.
 3. Run `<skill-dir>/scripts/issue-form.py inspect --repo anthropics/claude-code --template <selected.yml>` and compose
    answers keyed by the returned field IDs. Do not compare SHAs or consult a static template mirror.
 4. Gather only environment facts requested by the live form. `claude --version` supplies the Claude Code version.
-   Normalize OS and terminal values to exact live dropdown options; place precise versions in a free-text field when
-   useful. Infer Anthropic API, Bedrock, or Vertex only from environment/user evidence.
-5. Mark a required checkbox true only when its attestation is verified. Render through
-   `<skill-dir>/scripts/issue-form.py render`; resolve every reported missing/invalid answer before posting.
+   Normalize OS and terminal values to exact live dropdown options. When useful, place precise versions in a free-text
+   field. Infer Anthropic API, Bedrock, or Vertex only from environment/user evidence.
+5. Verify the preflight attestations. Search open and closed issues with
+   `gh search issues --repo anthropics/claude-code "<distinctive terms>"`. If an issue already reports the problem, do
+   not create a duplicate. Post new user-supplied facts there with `posting.md > Comment on Existing Issue`. Otherwise,
+   report the match under `### 🔎 Similar items` and stop. Compare `claude --version` with
+   `npm view @anthropic-ai/claude-code version`. If the local version is older, ask the user to update and reproduce.
+   Mark a required checkbox true only when its attestation is verified. Render through
+   `<skill-dir>/scripts/issue-form.py render`. Resolve every reported missing/invalid answer before posting.
 6. Run `posting.md > External-disclosure Review` on the agent-authored answers and rendered body. Compose a concise
    title after the live prefix. Filter live template metadata through `context.md > Issue Metadata Permissions`.
 7. Post with `gh issue create --repo anthropics/claude-code --title ... --body-file ...`, adding permitted labels and
    issue type from rendered metadata. On failure, follow `posting.md > Error Handling and Idempotency`. If permitted
-   rendered metadata includes `projects`, apply each entry after creation with `posting.md > Project-Template Metadata`;
-   a project-add failure is partial completion and never an issue-recreation trigger.
+   rendered metadata includes `projects`, apply each entry after creation with `posting.md > Project-Template Metadata`.
+   A project-add failure is partial completion and never an issue-recreation trigger.
 
 The helper owns form parsing and exact body structure. The agent owns template selection, environment interpretation,
 answer/title writing, the external-disclosure review, and posting. Follow `posting.md > Error Handling and Idempotency`
-after any ambiguous result; never recreate a possible partial issue.
+after any ambiguous result. Never recreate a possible partial issue.
+
+For a security vulnerability, do not create a public issue. Point the user to the repository's `SECURITY.md` policy and
+stop.
 
 For a comment on an existing issue, use `posting.md > Comment on Existing Issue` with this fixed repository. Finish a
 successful creation with the verified URL and the `### 🚀 Issue created` receipt.

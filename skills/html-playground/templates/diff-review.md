@@ -1,6 +1,6 @@
 # Diff Review Template
 
-Use this template when the playground is about reviewing code diffs: git commits, pull requests, code changes with
+When the playground reviews code diffs, use this template. It covers git commits, pull requests, and code changes with
 interactive line-by-line commenting for feedback.
 
 ## Layout
@@ -65,7 +65,7 @@ const diffData = [
 
 ## Comment system
 
-Each diff line gets a unique identifier for comment tracking:
+Each diff line has a unique identifier for comment tracking:
 
 ```javascript
 const comments = {}; // { lineId: commentText }
@@ -149,10 +149,12 @@ To create a diff viewer for a specific commit:
 
 ## Theme support
 
-Default to light mode; offer dark mode as an opt-in toggle:
+Unless the user specifies otherwise, use only the palette that matches the system appearance: light when the system uses
+light mode, dark otherwise. Do not add a theme toggle or a `prefers-color-scheme` variant.
+
+Light palette:
 
 ```css
-/* Light mode (default) */
 body {
   background: #f6f8fa;
   color: #1f2328;
@@ -167,20 +169,23 @@ body {
 .diff-line.deletion {
   background: #ffebe9;
 }
+```
 
-/* Dark mode (opt-in, e.g. body.dark or @media (prefers-color-scheme: dark)) */
-body.dark {
+Dark palette:
+
+```css
+body {
   background: #0d1117;
   color: #c9d1d9;
 }
-body.dark .file-card {
+.file-card {
   background: #161b22;
   border: 1px solid #30363d;
 }
-body.dark .diff-line.addition {
+.diff-line.addition {
   background: rgba(46, 160, 67, 0.15);
 }
-body.dark .diff-line.deletion {
+.diff-line.deletion {
   background: rgba(248, 81, 73, 0.15);
 }
 ```

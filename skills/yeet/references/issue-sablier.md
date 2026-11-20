@@ -1,6 +1,6 @@
 # Sablier Issue Workflow
 
-Create issues in `sablier-labs/*` repositories. Labels are always applied (user is org owner). Sablier repos don't use
+Create issues in `sablier-labs/*` repositories. Labels are always applied (user is org owner). Sablier repos do not use
 GitHub issue templates.
 
 ## Validate Prerequisites
@@ -9,10 +9,11 @@ See `context.md > Auth Validation`. The label fetch below is the auth check.
 
 ## Parse Repository Argument
 
-The **first token** is the repo name (without org prefix) → `sablier-labs/{repo_name}`. Remove it from arguments;
-remaining text is the issue description.
+The **first token** is the repo name (without org prefix) → `sablier-labs/{repo_name}`. Remove it from arguments. The
+remaining text is the issue description. Parse `--check` and handle it per
+`posting.md > Error Handling and Idempotency`.
 
-Example: `lockup "Bug in cliff streams"` → `repository = sablier-labs/lockup`
+Example: `evm-monorepo "Bug in cliff streams"` → `repository = sablier-labs/evm-monorepo`
 
 ## Apply Labels
 
@@ -57,7 +58,7 @@ specified.
 ## Create the Issue
 
 Run `posting.md > External-disclosure Review` on the title, body, labels, and attachments before posting. Follow
-`posting.md > Error Handling and Idempotency` after any failure; a label or metadata failure never authorizes issue
+`posting.md > Error Handling and Idempotency` after any failure. A label or metadata failure never authorizes issue
 recreation.
 
 ```bash
@@ -74,13 +75,13 @@ Display the verified URL with the `### 🚀 Issue created` receipt from `SKILL.m
 
 ```bash
 # Bug report
-lockup "Bug in stream creation for cliff durations"
+evm-monorepo "Bug in stream creation for cliff durations"
 
 # Feature request
 command-center "Add dark mode toggle to dashboard"
 
 # With --check flag
-lockup --check "Support dynamic durations"
+evm-monorepo --check "Support dynamic durations"
 
 # Docs update
 docs "Update integration guide for v2.2"

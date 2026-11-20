@@ -3,32 +3,106 @@
 Use secondary comparisons to discover candidates or corroborate material claims. Match primary sources and criteria to
 the ecosystem:
 
-| Ecosystem                | Primary evidence and decision criteria                                                                                                                                                   |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| JavaScript/TypeScript    | npm, package docs, repository, changelog, advisories; types, ESM fit, bundle and dependency cost                                                                                         |
-| Python                   | PyPI, package docs, repository; supported Python, typing, stdlib alternative, native-extension cost                                                                                      |
-| Rust                     | crates.io, docs.rs, repository; safety, compile impact, `no_std` need, documentation                                                                                                     |
-| Go                       | pkg.go.dev, standard library docs, repository; stdlib fit, dependencies, Go support, cancellation                                                                                        |
-| CLI                      | official repository and package metadata; install path, structured output, startup, platform support                                                                                     |
-| VS Code                  | Marketplace or Open VSX, repository, changelog; permissions, activation cost, editor compatibility                                                                                       |
-| Databases/infrastructure | product and cloud-provider docs, migration and operations guidance; workload, backup, scaling, operational cost                                                                          |
-| Agent skills             | [skills.sh](https://skills.sh), vendor docs, GitHub topics, GitHub code search for `path:SKILL.md`, and web search; valid metadata, portability, token use, license, bundled-script risk |
+| Ecosystem                | Primary evidence and decision criteria                                                                                                                                                                                                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| JavaScript/TypeScript    | npm, package docs, repository, changelog, advisories. Criteria: types, ESM fit, bundle and dependency cost                                                                                                                                      |
+| Python                   | PyPI, package docs, repository. Criteria: supported Python, typing, stdlib alternative, native-extension cost                                                                                                                                   |
+| Rust                     | crates.io, docs.rs, repository. Criteria: safety, compile impact, `no_std` need, documentation                                                                                                                                                  |
+| Go                       | pkg.go.dev, standard library docs, repository. Criteria: stdlib fit, dependencies, Go support, cancellation                                                                                                                                     |
+| Swift/iOS/macOS          | Apple Developer and Swift documentation, Swift Package Index, upstream manifest, releases, and advisories. Criteria: platform support, deployment target, Swift/Xcode compatibility, concurrency, resource bundles, license, and build cost     |
+| Kotlin/Android           | Android Developers, Kotlin/JetBrains documentation, Google Maven or Maven Central, upstream releases, and advisories. Criteria: Android versus Multiplatform targets, minSdk, Kotlin/Gradle/AGP compatibility, Compose fit, and dependency cost |
+| CLI                      | official repository and package metadata. Criteria: install path, structured output, startup, platform support                                                                                                                                  |
+| VS Code                  | Marketplace or Open VSX, repository, changelog. Criteria: permissions, activation cost, editor compatibility                                                                                                                                    |
+| Databases/infrastructure | product and cloud-provider docs, migration and operations guidance. Criteria: workload, backup, scaling, operational cost                                                                                                                       |
+| Agent skills             | [skills.sh](https://skills.sh), vendor docs, GitHub topics, GitHub code search for `path:SKILL.md`, and web search. Criteria: valid metadata, portability, token use, license, bundled-script risk                                              |
 
-Search more than one index for agent skills: registries do not cover every GitHub or independently published skill.
+If evidence is otherwise close, prefer:
 
-If evidence is otherwise close, prefer: stronger TypeScript support then smaller bundle then recency; Python or Go
-standard library, then typed/current Python support or fewer dependencies with idiomatic cancellation; safer,
-better-documented Rust; simpler-install, structured-output CLIs; and agent skills with progressive disclosure and fewer
-execution risks.
+- stronger TypeScript support, then a smaller bundle, then recency.
+- the Python or Go standard library, then typed/current Python support or fewer dependencies with idiomatic
+  cancellation.
+- safer, better-documented Rust.
+- native Apple or Android APIs when they meet the requirements without an external dependency.
+- CLIs with simpler installation and structured output.
+- agent skills with progressive disclosure and fewer execution risks.
 
 Treat a credible advisory, unsupported platform, stale or missing documentation, disruptive release churn, excess
 dependencies or bundle size, weak maintenance, excessive editor permissions, or unsafe bundled scripts as a material red
 flag only when evidence and the user's environment make it consequential.
 
+## Native Apple and Android tools
+
+Identify the presentation framework and shared-code boundaries before comparing libraries. Distinguish SwiftUI, UIKit,
+[AppKit](https://developer.apple.com/documentation/appkit), Android Views, Jetpack Compose, and Compose Multiplatform.
+Do not propose a platform migration to solve a local tooling need.
+
+### Swift for iOS and macOS
+
+Inspect `Package.swift`, `Package.resolved`, and the relevant Xcode project or workspace settings when present. Read the
+source configuration for generated projects. Establish each required platform, minimum OS version, Xcode version, Swift
+tools version, and Swift language mode.
+
+Use [Swift Package Index](https://swiftpackageindex.com) to discover packages and inspect compatibility evidence.
+Confirm support against upstream documentation, the selected release, and its
+[package manifest](https://docs.swift.org/package-manager/PackageDescription/PackageDescription.html). Verify iOS and
+macOS support separately, including Mac Catalyst when required. An iOS package or SwiftUI API does not establish macOS
+support.
+
+Compare native Apple frameworks first. For each viable library, check UI-framework integration, concurrency
+requirements, resource handling, and build cost where relevant. For binary dependencies, verify the required device,
+simulator, and Mac architectures. Distinguish documented compatibility from a build or test actually run in the user's
+project.
+
+### Kotlin for Android
+
+Inspect `settings.gradle(.kts)`, module `build.gradle(.kts)` files, `gradle/libs.versions.toml`, and the Gradle wrapper
+configuration when present. Establish `minSdk`, `compileSdk`, Kotlin, Android Gradle plugin (AGP), Gradle, and JDK
+requirements. Check the current
+[Android Kotlin compatibility guidance](https://developer.android.com/build/kotlin-support) and
+[Kotlin Gradle compatibility guidance](https://kotlinlang.org/docs/gradle-configure-project.html) for the selected
+versions.
+
+Compare Android SDK and AndroidX/Jetpack options before external libraries. Verify published artifacts in Google Maven
+or Maven Central against upstream releases. Check Views or Compose integration, coroutine and lifecycle behavior, and
+release-build shrinking requirements where relevant. For Compose, check compiler compatibility and existing BOM version
+constraints.
+
+Separate Android, plain JVM, and Kotlin Multiplatform support. Verify the project's required targets and source sets
+before recommending a Multiplatform artifact. Android support alone does not establish availability in `commonMain`.
+
+## Mobile tools and localization
+
+For Swift localization on iOS or macOS, compare
+[Apple String Catalogs](https://developer.apple.com/documentation/xcode/localizing-and-varying-text-with-a-string-catalog)
+and native generated symbols before adding a generator or runtime library. Check resource-bundle lookup, plural rules,
+format arguments, language overrides, and fallback behavior. Verify both Xcode builds and command-line SwiftPM workflows
+when the project uses both. Xcode resource processing and symbol generation do not prove `swift test` compatibility.
+
+For Android localization, first check XML string/plural resources and
+[Compose resource APIs](https://developer.android.com/develop/ui/compose/resources). Check per-app language preferences,
+locale fallback, formatted values, and right-to-left layouts. For existing Compose Multiplatform projects, also compare
+[multiplatform resources](https://kotlinlang.org/docs/multiplatform/compose-localize-strings.html).
+
+Distinguish resource management and type-safe access from translation services. A library does not supply reviewed
+translations. Evaluate remote services only when the task needs them, including recurring cost and data disclosure.
+
 ## Installation guidance
 
-For a private JavaScript package (`"private": true`), install into dependencies (`ni package-name`, never `ni -D`);
-translate to the repository's package manager when it has one.
+For a private JavaScript package (`"private": true`), install into dependencies (`ni package-name`, never `ni -D`). For
+that private package, when the repository has a package manager, translate the command to it.
+
+For Swift, follow the project's existing dependency manager. For Swift Package Manager or
+[Xcode packages](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app), give the
+verified package URL, version requirement, product name, and target wiring. Show the relevant `Package.swift`
+declarations or Xcode configuration steps. Use Homebrew for development CLIs, not app-library dependencies.
+
+For Kotlin on Android, follow the project's existing Gradle DSL and version catalog. Give verified Maven coordinates,
+repository requirements, and the dependency configuration for the correct module or Multiplatform source set. Follow
+[Android dependency guidance](https://developer.android.com/build/dependencies) for library, plugin, and BOM
+declarations. Show the applicable catalog and build-script entries without requiring a build-system migration.
+
+Preserve platform constraints and repository version-age rules. For a native option, give the configuration or resource
+migration steps instead of an install command.
 
 For agent skills, first look for an existing skill-management workflow (for example, a lockfile such as
 `~/.agents/.skill-lock.json` or a task recipe wrapping `skills add`) and give the change that registers the skill there;

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run-taze.sh - Run taze in non-interactive mode
 #
-# Usage: run-taze.sh [--include pkg1,pkg2] [--concurrency n] [--plan|--write] [path]
+# Usage: run-taze.sh [--include pkg1,pkg2] [--concurrency n] [--plan|--write [--direct-only]] [path]
 #
 # Automatically detects monorepo projects (workspaces in package.json
 # or pnpm-workspace.yaml) and enables recursive mode.
@@ -14,6 +14,7 @@
 #   1 - taze not installed
 #   2 - No package.json found
 #   64 - Usage error
+#   Other nonzero - Bun policy, taze, or plan parser failure
 
 set -euo pipefail
 
@@ -21,6 +22,7 @@ include=""
 concurrency=""
 write=false
 plan=false
+direct_only=false
 target_dir="."
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
@@ -44,6 +46,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --write)
     write=true
+    shift
+    ;;
+  --direct-only)
+    direct_only=true
     shift
     ;;
   --plan)
@@ -73,8 +79,9 @@ fi
 
 cd "$target_dir"
 
-# Refresh registry metadata so cached scans cannot hide newly published releases.
-taze_args=(major --force)
+# Refresh registry metadata so cached scans cannot hide newly published releases. Skip the GitHub Actions and
+# Node version-file scans: this workflow bumps npm dependencies, and those scans dominate runtime in large repos.
+taze_args=(major --force --no-github-actions --no-node-version)
 
 # Auto-detect monorepo
 if grep -q '"workspaces"' package.json 2>/dev/null ||
@@ -116,6 +123,11 @@ if [[ "$write" == true && "$plan" == true ]]; then
   exit 64
 fi
 
+if [[ "$direct_only" == true && "$write" != true ]]; then
+  echo "ERROR: --direct-only requires --write" >&2
+  exit 64
+fi
+
 # Mirror Bun's delayed-resolution policy for direct dependency candidates.
 # bunfig.toml stores seconds; Taze expects whole days.
 if [[ -f bun.lock || -f bun.lockb ]]; then
@@ -139,10 +151,16 @@ else
   taze_args+=("--include-locked")
 fi
 
-if [[ "$plan" == true ]]; then
+if [[ "$direct_only" == true ]]; then
+  node "$script_dir/write-taze-direct.mjs" "$(command -v taze)" "${taze_args[@]}"
+elif [[ "$plan" == true ]]; then
   plan_output="$(mktemp "${TMPDIR:-/tmp}/taze-plan.XXXXXX")"
   trap 'rm -f "$plan_output"' EXIT
-  NO_COLOR=1 taze "${taze_args[@]}" --no-group --no-timediff --no-nodecompat --sort name-asc >"$plan_output" 2>&1
+  NO_COLOR=1 taze "${taze_args[@]}" --no-group --no-timediff --no-nodecompat --sort name-asc >"$plan_output" 2>&1 || {
+    rc=$?
+    cat "$plan_output" >&2
+    exit "$rc"
+  }
   uv run "$script_dir/parse-taze-plan.py" --input "$plan_output"
 else
   taze "${taze_args[@]}" 2>&1

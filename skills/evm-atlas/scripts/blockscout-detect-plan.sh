@@ -3,10 +3,10 @@
 #
 # Reads the rate-limit/credit response headers the PRO host returns on every
 # call. x-ratelimit-limit maps directly to the plan tier:
-#   5 -> free, 15 -> standard, 30 -> pro
+#   5 -> free, 15 -> builder, 30 -> pro, 50 -> business
 #
 # Outputs key=value lines on stdout:
-#   plan=<free|standard|pro|unknown>
+#   plan=<free|builder|pro|business|unknown>
 #   rate_limit_rps=<int>
 #   rate_limit_remaining=<int>
 #   rate_limit_reset=<int seconds>
@@ -26,8 +26,9 @@ fi
 addr="0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe"
 url="https://api.blockscout.com/1/api/v2/addresses/$addr"
 
-headers=$(curl -fsS -D - -o /dev/null \
-  -H "authorization: Bearer $BLOCKSCOUT_API_KEY" "$url" 2>/dev/null) || {
+# Pass the key on stdin so it never appears in the process list.
+headers=$(printf 'authorization: Bearer %s\n' "$BLOCKSCOUT_API_KEY" \
+  | curl -fsS -D - -o /dev/null -H @- "$url" 2>/dev/null) || {
   echo "Error: request failed — invalid key or network issue (PRO host returns 401 for a bad key)." >&2
   exit 1
 }
@@ -45,8 +46,9 @@ credits=$(hval "x-credits-remaining")
 
 case "$rps" in
   5)  plan="free" ;;
-  15) plan="standard" ;;
+  15) plan="builder" ;;
   30) plan="pro" ;;
+  50) plan="business" ;;
   *)  plan="unknown" ;;
 esac
 

@@ -1,7 +1,7 @@
 # Code Map Template
 
-Use this template when the playground is about visualizing codebase architecture: component relationships, data flow,
-layer diagrams, system architecture with interactive commenting for feedback.
+When the playground visualizes codebase architecture, use this template. It covers component relationships, data flow,
+layer diagrams, and system architecture with interactive commenting for feedback.
 
 ## Layout
 
@@ -68,8 +68,12 @@ const connections = [
 
 function renderDiagram() {
   const visibleNodes = nodes.filter((n) => state.layers[n.layer]);
+  const visibleIds = new Set(visibleNodes.map((n) => n.id));
+  const visibleConnections = connections.filter(
+    (c) => state.connectionTypes[c.type] && visibleIds.has(c.from) && visibleIds.has(c.to),
+  );
   // Draw connections first (under nodes), then nodes
-  connections.forEach((c) => drawConnection(c));
+  visibleConnections.forEach((c) => drawConnection(c));
   visibleNodes.forEach((n) => drawNode(n));
 }
 ```
@@ -96,7 +100,7 @@ Use SVG markers for arrowheads:
 
 ## Comment system
 
-The key differentiator for code maps is click-to-comment functionality:
+Code maps let users click components to add comments:
 
 1. **Click node** → Open modal with component name, file path, textarea
 2. **Save comment** → Add to comments list, mark node with visual indicator (colored border)
@@ -134,11 +138,11 @@ Can we add connection pooling? Current implementation creates new connections pe
 This should validate JWT tokens and extract user context.
 ```
 
-Only include comments the user added. Mention which layers are visible if not showing the full system.
+Only include comments the user added. If the full system is not visible, mention which layers are visible.
 
 ## Pre-populating with real data
 
-For a specific codebase, pre-populate with:
+For a specific codebase, populate the initial state with:
 
 - **Nodes:** 15-25 key components with real file paths
 - **Connections:** 20-40 relationships based on actual imports/calls
@@ -148,6 +152,9 @@ For a specific codebase, pre-populate with:
 Organize nodes in horizontal bands by layer, with consistent spacing.
 
 ## Layer color palette (light theme)
+
+These fills suit a light theme. When the system uses dark mode, use dark tints of the same hues that keep node text
+readable.
 
 | Layer       | Node fill            | Description                          |
 | ----------- | -------------------- | ------------------------------------ |
