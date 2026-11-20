@@ -17,7 +17,7 @@ This skill is coordination-exempt: skip the ai-coord gate for its declared work.
 ## Routing
 
 Use `yeet` to author or update a pull request, issue, issue comment, or discussion. `yeet` owns semantic analysis,
-repository templates, Paul's writing voice, idempotency, and direct posting. Route repository renames through
+repository templates, the user's writing voice, idempotency, and direct posting. Route repository renames through
 `repo-rename` so GitHub and local continuity change together.
 
 ## Authority

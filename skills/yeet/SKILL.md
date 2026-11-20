@@ -18,7 +18,7 @@ description:
 This skill is coordination-exempt: skip the ai-coord gate for its declared work.
 
 Create or update GitHub contributions from repository evidence, using the matching workflow's templates, idempotency
-rules, and Paul's writing voice.
+rules, and the user's writing voice.
 
 ## Prerequisites
 
