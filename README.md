@@ -46,12 +46,11 @@ bunx skills add owner/repo
 
 Skills are installed from these repositories:
 
-| Source                                                                                  | Managed skills                                    | Description                                                                                                  |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [0xNikolas/agent-skills](https://github.com/0xNikolas/agent-skills)                     | Catalog portfolio                                 | General-purpose skills (commit, yeet, orchestration)                                                         |
-| [vercel-labs/skills](https://github.com/vercel-labs/skills)                             | `find-skills`                                     | Skills ecosystem discovery                                                                                   |
-| [mattpocock/skills](https://github.com/mattpocock/skills)                               | 29 skills (`engineering`, `productivity`, `misc`) | AI Hero's engineering and productivity skills; supersedes the catalog's own `grill-me` and `codebase-design` |
-| [arnabbagxd/Brand-building-skills](https://github.com/arnabbagxd/Brand-building-skills) | 29 skills                                         | Brand strategy and marketing skills                                                                          |
+| Source                                                                                  | Managed skills                                    | Description                                                              |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
+| [0xNikolas/agent-skills](https://github.com/0xNikolas/agent-skills)                     | Catalog portfolio                                 | General-purpose skills (commit, yeet, orchestration)                     |
+| [mattpocock/skills](https://github.com/mattpocock/skills)                               | 19 skills (`engineering`, `productivity`, `misc`) | AI Hero's engineering and productivity skills not covered by the catalog |
+| [arnabbagxd/Brand-building-skills](https://github.com/arnabbagxd/Brand-building-skills) | 29 skills                                         | Brand strategy and marketing skills                                      |
 
 For bootstrap or recovery, install the catalog directly from its remote source; this does not require a local
 `agent-skills` checkout:
